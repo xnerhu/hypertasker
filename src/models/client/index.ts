@@ -20,7 +20,7 @@ export class Client extends EventEmitter {
   protected _onMessage = (message: string) => {
     const data = JSON.parse(message) as IServerMessage;
 
-    if (data.action === 'data') {
+    if (data.type === 'payload') {
       this._status = 'busy';
     }
 
@@ -32,9 +32,12 @@ export class Client extends EventEmitter {
       throw new Error('This worker has no job!');
     }
 
-    const message: IClientMessage = { action: 'finished', data };
-
-    this._ws.send(JSON.stringify(message));
     this._status = 'ready';
+    this._sendPayload(data);
+  }
+
+  protected _sendPayload(data: any) {
+    const message: IClientMessage = { type: 'finished', data };
+    this._ws.send(JSON.stringify(message));
   }
 }

@@ -1,11 +1,11 @@
 export type IWorkerStatus = 'ready' | 'busy';
 
 export interface IClientMessage {
-  action?: 'finished';
+  type?: 'finished' | 'message';
   data?: any;
 }
 
 export interface IServerMessage {
-  action?: 'data';
+  type?: 'payload' | 'message';
   data?: any;
 }
