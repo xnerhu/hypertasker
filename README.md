@@ -1,2 +1,3 @@
-# hysker
-A library for building a workers network.
+# HyperTasker
+
+🛠️ Build a network of workers!
