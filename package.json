@@ -1,0 +1,42 @@
+{
+  "name": "hysker",
+  "version": "1.0.0",
+  "description": "Build a network of workers!",
+  "keywords": [
+    "workers",
+    "tasker",
+    "network",
+    "p2p",
+    "websockets",
+    "ws",
+    "sockets"
+  ],
+  "author": {
+    "name": "Mikołaj Palkiewicz",
+    "email": "xnerhu@gmail.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xnerhu/hysker.git"
+  },
+  "homepage": "https://github.com/xnerhu/hysker#readme",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "npm run clean && tsc",
+    "prepublishOnly": "npm run build",
+    "clean": "rimraf ./build"
+  },
+  "devDependencies": {
+    "@types/node": "12.12.14",
+    "@types/ws": "^6.0.4",
+    "rimraf": "3.0.0",
+    "tslint-config-airbnb": "5.11.2",
+    "typescript": "3.7.3"
+  },
+  "dependencies": {
+    "ws": "^7.2.0"
+  }
+}
