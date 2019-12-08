@@ -3,7 +3,7 @@ import WebSocket from 'ws';
 import { IncomingMessage } from 'http';
 
 import { IServerConfig, ITask, IServerMessageEvent, IServerFinishEvent } from '../../interfaces';
-import { Worker } from './Worker';
+import { Worker } from './worker';
 import { makeId } from '../../utils';
 
 export declare interface Server<T> {
