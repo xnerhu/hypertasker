@@ -1,5 +1,5 @@
 {
-  "name": "hysker",
+  "name": "hypertasker",
   "version": "1.0.0",
   "description": "Build a network of workers!",
   "keywords": [
@@ -18,9 +18,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xnerhu/hysker.git"
+    "url": "git+https://github.com/xnerhu/hypertasker.git"
   },
-  "homepage": "https://github.com/xnerhu/hysker#readme",
+  "homepage": "https://github.com/xnerhu/hypertasker#readme",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
