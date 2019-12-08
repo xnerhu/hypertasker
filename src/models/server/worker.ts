@@ -2,39 +2,61 @@ import WebSocket from 'ws';
 import { IncomingMessage } from 'http';
 
 import { Server } from '.';
-import { IWorkerStatus, IServerMessage, IClientMessage } from '../../interfaces';
-
-let _id = 0;
+import { IWorkerStatus, IServerMessage, IClientMessage, ITask, IServerMessageEvent } from '../../interfaces';
 
 export class Worker {
-  public id = _id++;
-
   public status: IWorkerStatus = 'ready';
 
-  constructor(protected server: Server, protected ws: WebSocket, protected req: IncomingMessage) {
+  constructor(public server: Server, public ws: WebSocket, public req: IncomingMessage) {
     this.ws.on('message', this._onMessage);
   }
 
   protected _onMessage = (message: string) => {
-    const { type, data } = JSON.parse(message) as IClientMessage;
+    const data = JSON.parse(message) as IClientMessage;
 
-    if (type === 'finished') {
-      this.status = 'ready';
-      this.server.emit('task-finished', data, this);
+    if (data.type === 'message') {
+      const event: IServerMessageEvent = {
+        worker: this,
+        reply: () => {
+
+        }
+      };
+
+
+      // this.server.emit('message', str, data, this);
+
+      // console.log(str);
     }
   }
 
-  public process(data: any) {
-    if (this.status !== 'ready') {
-      throw new Error('This worker is busy!');
-    }
+  public sendPayload(data: any, _id: string): Promise<ITask<any>> {
+    return new Promise((resolve, reject) => {
+      if (this.status !== 'ready') {
+        return reject('This worker is busy!');
+      }
 
-    this.status = 'busy';
-    this._sendPayload(data);
+      const onTaskMessage = (message: string) => {
+        const { type, data } = JSON.parse(message) as IClientMessage;
+
+        if (type === 'finished') {
+          this.status = 'ready';
+          this.ws.removeEventListener('message', onTaskMessage as any);
+
+          resolve({ _id, data });
+        }
+      }
+
+      this.ws.on('message', onTaskMessage);
+      this.status = 'busy';
+      this.send({ type: 'payload', data, _taskId: _id });
+    });
   }
 
-  protected _sendPayload(data: any) {
-    const message: IServerMessage = { type: 'payload', data };
-    this.ws.send(JSON.stringify(message));
+  public send(data: IServerMessage) {
+    this.ws.send(JSON.stringify(data));
+  }
+
+  public sendMessage(message: string) {
+    this.send({ type: 'message', data: message });
   }
 }

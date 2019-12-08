@@ -1,3 +1,5 @@
+import { Worker } from '../models/server/worker';
+
 export type IWorkerStatus = 'ready' | 'busy';
 
 export interface IClientMessage {
@@ -7,5 +9,10 @@ export interface IClientMessage {
 
 export interface IServerMessage {
   type?: 'payload' | 'message';
+  _taskId?: string;
   data?: any;
+}
+
+export interface IServerMessageEvent {
+  worker?: Worker;
 }

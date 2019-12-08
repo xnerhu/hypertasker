@@ -1,7 +1,1 @@
-import { ServerOptions, ClientOptions } from 'ws';
-
-export interface IServerConfig extends ServerOptions {
-  packetSize?: number;
-}
-
-export type IClientOptions = ClientOptions
+export { ServerOptions as IServerConfig, ClientOptions as IClientOptions } from 'ws';
