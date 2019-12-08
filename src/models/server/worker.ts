@@ -2,43 +2,45 @@ import WebSocket from 'ws';
 import { IncomingMessage } from 'http';
 
 import { Server } from '.';
-import { IWorkerStatus, IServerMessage, IClientMessage, ITask, IServerMessageEvent } from '../../interfaces';
+import { IWorkerStatus, IMessage, ITask, IServerMessageEvent } from '../../interfaces';
 
 export class Worker {
   public status: IWorkerStatus = 'ready';
+
+  public taskId: string;
 
   constructor(public server: Server, public ws: WebSocket, public req: IncomingMessage) {
     this.ws.on('message', this._onMessage);
   }
 
   protected _onMessage = (message: string) => {
-    const data = JSON.parse(message) as IClientMessage;
+    const { channel, data, _taskId } = JSON.parse(message) as IMessage;
 
-    if (data.type === 'message') {
+    if (channel !== 'finished') {
       const event: IServerMessageEvent = {
+        _taskId,
         worker: this,
-        reply: () => {
-
+        reply: (channel: string, ...args: any[]) => {
+          this.send(channel, ...args);
         }
       };
 
-
-      // this.server.emit('message', str, data, this);
-
-      // console.log(str);
+      this.server.emit(channel, event, ...data);
     }
   }
 
   public sendPayload(data: any, _id: string): Promise<ITask<any>> {
+    this.taskId = _id;
+
     return new Promise((resolve, reject) => {
       if (this.status !== 'ready') {
         return reject('This worker is busy!');
       }
 
       const onTaskMessage = (message: string) => {
-        const { type, data } = JSON.parse(message) as IClientMessage;
+        const { channel, data } = JSON.parse(message) as IMessage;
 
-        if (type === 'finished') {
+        if (channel === 'finished') {
           this.status = 'ready';
           this.ws.removeEventListener('message', onTaskMessage as any);
 
@@ -46,17 +48,15 @@ export class Worker {
         }
       }
 
-      this.ws.on('message', onTaskMessage);
       this.status = 'busy';
-      this.send({ type: 'payload', data, _taskId: _id });
+      this.ws.on('message', onTaskMessage);
+      this.send('payload', ...data);
     });
   }
 
-  public send(data: IServerMessage) {
-    this.ws.send(JSON.stringify(data));
-  }
+  public send(channel: string, ...data: any[]) {
+    const message: IMessage = { channel, data, _taskId: this.taskId };
 
-  public sendMessage(message: string) {
-    this.send({ type: 'message', data: message });
+    this.ws.send(JSON.stringify(message));
   }
 }

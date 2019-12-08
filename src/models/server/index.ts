@@ -2,14 +2,14 @@ import { EventEmitter } from 'events';
 import WebSocket from 'ws';
 import { IncomingMessage } from 'http';
 
-import { IServerConfig, ITask, IClientMessage, IServerMessageEvent } from '../../interfaces';
+import { IServerConfig, ITask, IServerMessageEvent, IServerFinishEvent } from '../../interfaces';
 import { Worker } from './Worker';
 import { makeId } from '../../utils';
 
 export declare interface Server<T> {
+  on(event: string, listener: (event: IServerMessageEvent, ...args: any[]) => void): this;
+  on(event: 'finished', listener: (event: IServerFinishEvent, ...args: any[]) => void): this;
   on(event: 'new-worker', listener: (worker: Worker) => void): this;
-  on(event: 'message', listener: (event: IServerMessageEvent) => void): this;
-  on(event: 'task-finished', listener: (task: ITask<T>) => void): this;
 }
 
 export class Server<T = any> extends EventEmitter {
@@ -38,8 +38,16 @@ export class Server<T = any> extends EventEmitter {
     const _id = makeId(24);
     const result = await worker.sendPayload(data, _id);
 
-    this.emit('task-finished', result);
+    const event: IServerFinishEvent = { _taskId: _id, worker };
+
+    this.emit('finished', event, ...result.data);
 
     return result;
+  }
+
+  public send(channel: string, ...data: any[]) {
+    this.workers.forEach(r => {
+      r.send(channel, ...data);
+    });
   }
 }

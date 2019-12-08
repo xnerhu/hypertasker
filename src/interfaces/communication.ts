@@ -2,17 +2,25 @@ import { Worker } from '../models/server/worker';
 
 export type IWorkerStatus = 'ready' | 'busy';
 
-export interface IClientMessage {
-  type?: 'finished' | 'message';
+export interface IMessage {
   data?: any;
-}
-
-export interface IServerMessage {
-  type?: 'payload' | 'message';
   _taskId?: string;
-  data?: any;
+  channel?: string;
 }
 
-export interface IServerMessageEvent {
+export interface IMessageEvent {
+  reply?: (channel: string, ...args: any[]) => void;
+}
+
+export interface IClientMessageEvent extends IMessageEvent {
+  _taskId?: string;
+}
+
+export interface IServerMessageEvent extends IClientMessageEvent {
+  worker?: Worker;
+}
+
+export interface IServerFinishEvent {
+  _taskId?: string;
   worker?: Worker;
 }

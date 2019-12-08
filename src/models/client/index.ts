@@ -1,13 +1,16 @@
 import { EventEmitter } from 'events';
 import WebSocket from 'ws';
 
-import { IClientOptions, IClientMessage, IServerMessage, IWorkerStatus } from '../../interfaces';
+import { IClientOptions, IMessage, IWorkerStatus, IClientMessageEvent } from '../../interfaces';
 
-export declare interface Client<T> {
-  on(event: 'message', listener: (data: IServerMessage) => void): this;
+export declare interface Client {
+  on(event: 'payload', listener: (event: IClientMessageEvent, ...args: any[]) => void): this;
+  on(event: string, listener: (event: IClientMessageEvent, ...args: any[]) => void): this;
 }
 
-export class Client<T = any> extends EventEmitter {
+export class Client extends EventEmitter {
+  public taskId: string;
+
   public status: IWorkerStatus = 'ready';
 
   public ws: WebSocket;
@@ -21,29 +24,35 @@ export class Client<T = any> extends EventEmitter {
   }
 
   protected _onMessage = (message: string) => {
-    const data: IServerMessage = JSON.parse(message);
+    const { channel, _taskId, data } = JSON.parse(message) as IMessage;
 
-    if (data.type === 'payload') {
+    if (channel === 'payload') {
       this.status = 'busy';
+      this.taskId = _taskId;
     }
 
-    this.emit('message', data);
+    const event: IClientMessageEvent = {
+      _taskId,
+      reply: (channel: string, ...args: any[]) => {
+        this.send(channel, ...args);
+      }
+    };
+
+    this.emit(channel, event, ...data);
   }
 
-  public finish(data?: T) {
+  public finish(data?: any) {
     if (this.status !== 'busy') {
       throw new Error('This worker has no job!');
     }
 
     this.status = 'ready';
-    this.send({ type: 'finished', data });
+    this.send('finished', ...data);
   }
 
-  public send(data: IClientMessage) {
-    this.ws.send(JSON.stringify(data));
-  }
+  public send(channel: string, ...data: any[]) {
+    const message: IMessage = { channel, data, _taskId: this.taskId };
 
-  public sendMessage(message: any) {
-    this.send({ type: 'message', data: message });
+    this.ws.send(JSON.stringify(message));
   }
 }
